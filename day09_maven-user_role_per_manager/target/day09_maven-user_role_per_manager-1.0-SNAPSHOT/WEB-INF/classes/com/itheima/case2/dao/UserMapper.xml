@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itheima.case2.dao.UserMapper">
+
+<!--    type表示接口的放回值类型,如果是单列集合这里书写泛型类型-->
+    <resultMap id="findAllResultMap" type="User" autoMapping="true">
+<!--        配置的是朱表t_user和User实体类的主键关系-->
+<!--        column sql语句查询结果的主键字段名，property=实体类User的属性名-->
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+<!--
+            配置角色 :一个用户多个角色,因此子啊User类中定义多个角色
+            collection：表示一对多的配置
+            property = "roles" ：表示User实体类中存储多个角色的容器名
+            ofType = “Role” ：表示容器中存储的数据类型
+
+--><collection property="roles" ofType="Role" autoMapping="true">
+        <id column="rid" property="id"></id>
+
+    </collection>
+    </resultMap>
+
+    <select id="findAll" resultMap="findAllResultMap">
+        select u.*, r.id rid, r.name, r.keyword, r.description
+        from (
+                 select * from t_user
+                 order by id
+                     limit #{startIndex}, #{pageSize}
+             ) u
+                 inner join t_user_role ur
+                 inner join t_role r
+                            on u.id = ur.user_id and ur.role_id = r.id;
+    </select>
+
+<!--    在mybatis中如果接口方法中有多个参数，要求我们必须使用@Param注解修饰形参，然后在#「」中的属性@Param注解-->
+    <insert id="addUIDAndRIDToUserAndRoleTable">
+        insert into t_user_role(user_id,role_id) values
+        <foreach collection="roleIds" item="rid" separator=",">
+            (#{uid},#{rid})
+        </foreach>
+
+    </insert>
+    <insert id="add">
+        insert into t_user(username,password,email,remark) values (#{username},#{password},#{email},#{remark})
+    </insert>
+
+
+</mapper>
